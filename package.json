@@ -1,0 +1,21 @@
+{
+    "name": "icons-x",
+    "type": "module",
+    "version": "0.0.1",
+    "description": "Icons X",
+    "bin": "./main.js",
+    "main": "./main.js",
+    "files": [
+        "./main.js",
+        "./utils.js",
+        "./README.md"
+    ],
+    "keywords": [
+        "icons"
+    ],
+    "author": "DevelopedByAnt",
+    "license": "ISC",
+    "dependencies": {
+        "@clack/prompts": "^0.7.0"
+    }
+}

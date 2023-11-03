@@ -32,6 +32,7 @@ async function selectProvider(){
     config['iconProvider'] = await clack.select({
         message:"Select icons provider",
         options: [
+            { label: "Lucide icons",value:"lucide" },
             { label: "Google icons",value:"google" },
             { label: "BootStrap icons",value:"bootstrap" },
             { label: "Font Awesome",value:"fontawesome" },
@@ -95,8 +96,7 @@ while(true){
     component['urlName'] = utils.iconUrlName(component['name'])
 
     // run code
-    spinner.start(`Checking if icon exists`)
-    await new Promise(r=>setTimeout(r,500))
+    spinner.start()
 
     const svgText = await utils.svg(config['iconProvider'],component['urlName'],config['framework'])
     // Check if svg exists

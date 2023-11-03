@@ -1,5 +1,5 @@
 /**
- * @typedef { "google"|"bootstrap"|"fontawesome" } Providers
+ * @typedef { "lucide"|"google"|"bootstrap"|"fontawesome" } Providers
  * @typedef { "react"|"svelte"|"svg" } Frameworks */
 export default new class utils {
 
@@ -19,22 +19,27 @@ export default new class utils {
      * @param {string} url
      * @param {Frameworks} framework @private */
     async GET_SVG(url,framework){
-        const provider = url.includes("gstatic.com") ? "google" : url.includes("getbootstrap.com") ? "bootstrap" : url.includes("fontawesome.com") ? "fontawesome" : ""
+        const provider = (
+            url.includes("gstatic.com") ? "google" : url.includes("getbootstrap.com") ? "bootstrap" :
+            url.includes("fontawesome.com") ? "fontawesome" : url.includes("lucide-icons") ? "lucide" : ""
+        )
         const request = await fetch(url)
         // return empty string
         if(request.status!==200) return ""
         // Clean svg
         let svgText = (await request.text()).trim()
-        svgText = svgText.replace(/(height|width)="[^"]+"/g, `$1="100%"`).replace(/(class|fill)="[^"]+"/g, '').replace(/ >/g,">").replace(/<!--[\s\S]*?-->/ig,'')
+        svgText = svgText.replace(/ (height|width)="[^"]+"/g, ` $1="100%"`).replace(/(class)="[^"]+"/g, '').replace(/ >/g,">").replace(/<!--[\s\S]*?-->/ig,'')
+                  .replace(/\n/g,"").replace(/\s+/g, ' ').replace(/ <path/ig,'<path')
         // if svg does not contains height or with, add it
         if(!svgText.includes('width="')) svgText = svgText.replace('>',' height="100%" width="100%">')
+        // if svg does not fill, add it
+        if(!svgText.includes('fill=')) svgText = svgText.replace('>',' fill="currentColor">')
         // format google svg
         const spaces = {
             one:framework==="react" ? "            " : "    ",
             two:framework==="react" ? "        " : "",
         }
-        if(provider==="google"||provider==="fontawesome") svgText = svgText.replace('">',`">\n${spaces.one}`).replace('</svg>',`\n${spaces.two}</svg>`)
-        else if(provider==="bootstrap") svgText = svgText.replace('<path',`${spaces.one}<path`).replace('</svg>',`${spaces.two}</svg>`)
+        svgText = svgText.replace(/<path/ig,`\n${spaces.one}<path`).replace('</svg>',`\n${spaces.two}</svg>`)
         return svgText
     }
 
@@ -43,6 +48,7 @@ export default new class utils {
      * @param {Providers} provider svg provider @private */
     GET_SVG_PROVIDER_URL(urlName,provider){
         if(provider==="google") return `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${urlName}/default/24px.svg`
+        else if(provider==="lucide") return `https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/${urlName}.svg`
         else if(provider==="bootstrap") return `https://icons.getbootstrap.com/assets/icons/${urlName}.svg`
         else if(provider==="fontawesome") return `https://site-assets.fontawesome.com/releases/v6.1.1/svgs/solid/${urlName}.svg`
         else return `https://icons.getbootstrap.com/assets/icons/${urlName}.svg`
@@ -62,12 +68,18 @@ export default new class utils {
      * @param {Frameworks} framework */
     component(svgText,framework){
         const result = { code:"",fileExt:"" }
+        // for lucide icons, set stroke as color
+        if(svgText.includes('stroke="currentColor"') && framework!=="svg") svgText = svgText.replace('stroke="currentColor"','stroke={color}')
+        else if(!svgText.includes('stroke="currentColor"') && framework!=="svg") svgText = svgText.replace('fill="currentColor"','fill={color}')
+
         if(framework==="react"){
-            result['code'] = `export default function(){\n    return(\n        ${svgText}\n    )\n}`
+            svgText = svgText.replace('width="100%"','width={size?size:"100%"}').replace('height="100%"','height={size?size:"100%"}')
+            result['code'] = `export default function({size,color}:{size?:string,color?:string}){\n    return(\n        ${svgText}\n    )\n}`
             result['fileExt'] = ".tsx"
         }
         else if(framework==="svelte"){
-            result['code'] = svgText
+            svgText = svgText.replace('width="100%"','width={size}').replace('height="100%"','height={size}')
+            result['code'] = `<script lang="ts">\n    export let size:string|undefined = "100%"\n    export let color:string|undefined = "currentColor"\n</script>\n${svgText}`
             result['fileExt'] = ".svelte"
         }
         else{

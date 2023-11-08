@@ -29,7 +29,7 @@ export default new class utils {
         // Clean svg
         let svgText = (await request.text()).trim()
         svgText = svgText.replace(/ (height|width)="[^"]+"/g, ` $1="100%"`).replace(/(class)="[^"]+"/g, '').replace(/ >/g,">").replace(/<!--[\s\S]*?-->/ig,'')
-                  .replace(/\n/g,"").replace(/\s+/g, ' ').replace(/ <path/ig,'<path')
+                  .replace(/\n/g,"").replace(/\s+/g, ' ').replace(/ <path/ig,'<path').replace(/-(\w)/g, (match, group) => group.toUpperCase())
         // if svg does not contains height or with, add it
         if(!svgText.includes('width="')) svgText = svgText.replace('>',' height="100%" width="100%">')
         // if svg does not fill, add it
@@ -69,7 +69,7 @@ export default new class utils {
     component(svgText,framework){
         const result = { code:"",fileExt:"" }
         // for lucide icons, set stroke as color
-        if(svgText.includes('stroke="currentColor"') && framework!=="svg") svgText = svgText.replace('stroke="currentColor"','stroke={color}')
+        if(svgText.includes('stroke="currentColor"') && framework!=="svg") svgText = svgText.replace('stroke="currentColor"','stroke={color?color:"currentColor"}')
         else if(!svgText.includes('stroke="currentColor"') && framework!=="svg") svgText = svgText.replace('fill="currentColor"','fill={color}')
 
         if(framework==="react"){
